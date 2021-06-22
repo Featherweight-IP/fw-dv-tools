@@ -1,0 +1,21 @@
+
+name: CI
+on:
+  - push
+  - pull_request
+  - workflow_dispatch
+
+jobs:
+  ci-linux:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Build Images
+      run: |
+        ./build.sh
+    - name: Push Image
+      run: |
+        echo ${{ secrets.GHCR_PAT }} | docker login ghcr.io -u mballance --password-stdin
+        docker tag fw-dv-tools:latest ghcr.io/featherweight-ip/fw-dv-tools:latest
+        docker push ghcr.io/featherweight-ip/fw-dv-tools:latest
+

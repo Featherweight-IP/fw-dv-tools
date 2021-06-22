@@ -7,10 +7,8 @@ endif
 
 WGET=wget
 
-ifneq (true,$(INSTALL_GLOBAL))
+ifeq (,$(INSTALL_PREFIX))
 INSTALL_PREFIX=$(BUILD_DIR)/install
-else
-INSTALL_PREFIX=/usr
 endif
 
 CONFIGURE_OPTS += --prefix=$(INSTALL_PREFIX)
@@ -45,10 +43,17 @@ YOSYS_DIR=yosys-master
 YOSYS_ZIP=$(PACKAGES_DIR)/$(YOSYS_DIR).zip
 YOSYS_URL=https://github.com/YosysHQ/yosys/archive/refs/heads/master.zip
 
+ZEPHYR_SDK_VERSION=0.12.2
+ZEPHYR_SDK_RUN=zephyr-toolchain-riscv64-$(ZEPHYR_SDK_VERSION)-x86_64-linux-setup.run
+ZEPHYR_SDK_URL=https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v$(ZEPHYR_SDK_VERSION)/$(ZEPHYR_SDK_RUN)
+ZEPHYR_SDK_RUN_PATH=$(PACKAGES_DIR)/$(ZEPHYR_SDK_RUN)
+
+
 PACKAGES += $(BUILD_DIR)/cmake.build
 PACKAGES += $(BUILD_DIR)/icarus.build
 PACKAGES += $(BUILD_DIR)/sby.build
 PACKAGES += $(BUILD_DIR)/verilator.build
+PACKAGES += $(BUILD_DIR)/zephyr-sdk.build
 
 all : $(PACKAGES)
 
@@ -63,7 +68,7 @@ $(BUILD_DIR)/boolector.build : $(BOOLECTOR_TGZ)
 	cd $(BUILD_DIR)/boolector_tmp/$(BOOLECTOR_DIR) ; ./contrib/setup-lingeling.sh
 	cd $(BUILD_DIR)/boolector_tmp/$(BOOLECTOR_DIR) ; ./contrib/setup-cadical.sh
 	cd $(BUILD_DIR)/boolector_tmp/$(BOOLECTOR_DIR) ; \
-		./configure.sh --shared --prefix $(INSTALL_PREFIX)
+		./configure.sh --prefix $(INSTALL_PREFIX)
 	cd $(BUILD_DIR)/boolector_tmp/$(BOOLECTOR_DIR)/build ; $(MAKE)
 	cd $(BUILD_DIR)/boolector_tmp/$(BOOLECTOR_DIR)/build ; $(MAKE) install
 	touch $@
@@ -158,4 +163,19 @@ $(BUILD_DIR)/yosys.build : $(YOSYS_ZIP)
 $(YOSYS_ZIP) :
 	mkdir -p `dirname $@`
 	$(WGET) -O $@ $(YOSYS_URL)
+
+#********************************************************************
+#* Zephyr SDK
+#********************************************************************
+$(BUILD_DIR)/zephyr-sdk.build : $(ZEPHYR_SDK_RUN_PATH)
+	rm -rf $(BUILD_DIR)/zephyr_tmp
+	mkdir -p $(BUILD_DIR)/zephyr_tmp
+	mkdir -p $(INSTALL_PREFIX)
+	$(ZEPHYR_SDK_RUN_PATH) -- -y -d $(INSTALL_PREFIX)
+	touch $@
+
+
+$(ZEPHYR_SDK_RUN_PATH) :
+	$(WGET) -O $@ $(ZEPHYR_SDK_URL) || rm -f $@
+	chmod +x $@
 
