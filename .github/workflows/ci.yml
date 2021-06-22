@@ -10,15 +10,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
+    - name: Docker Help
+      run: |
+        docker build --help
     - name: Build Tool-Build Image
       run: |
         docker build -t fw-dv-tools-build dv-tools-build
     - name: Build Tools
       run: |
-        docker run -v `pwd`/dv-tools:/dv-tools fw-dv-tools-build /dv-tools/build.sh
+        docker run --volume `pwd`/dv-tools:/dv-tools fw-dv-tools-build /dv-tools/build.sh
     - name: Build Tools Image
       run: |
-        docker build -t fw-dv-tools -v `pwd`/dv-tools:/dv-tools dv-tools
+        docker build -t fw-dv-tools --volume `pwd`/dv-tools:/dv-tools dv-tools
     - name: Push Image
       run: |
         echo ${{ secrets.GHCR_PAT }} | docker login ghcr.io -u mballance --password-stdin
