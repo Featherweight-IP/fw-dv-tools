@@ -19,10 +19,12 @@ jobs:
     - name: Build Tools
       run: |
         docker run --volume `pwd`/dv-tools:/dv-tools fw-dv-tools-build /dv-tools/build.sh
-    - name: Build Tools Image
+    - name: Unpack Tools
       run: |
         cd dv-tools
         tar xvzf tools.tar.gz
+    - name: Build Tools Image
+      run: |
         docker build -t fw-dv-tools dv-tools
     - name: Push Image
       run: |
